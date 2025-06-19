@@ -2,45 +2,45 @@ import React from 'react';
 
 const NavigationSidebar = ({ currentView, setCurrentView, userRole, onLogout }) => {
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: '📊', roles: ['admin', 'professional', 'caregiver'] },
-    { id: 'patients', label: 'Pacientes', icon: '👶', roles: ['admin', 'professional'] },
-    { id: 'records', label: 'Registros', icon: '📝', roles: ['admin', 'professional'] },
-    { id: 'appointments', label: 'Citas', icon: '📅', roles: ['admin', 'professional'] },
-    { id: 'education', label: 'Educación', icon: '📚', roles: ['admin', 'professional', 'caregiver'] },
-    { id: 'reports', label: 'Reportes', icon: '📈', roles: ['admin'] },
-    { id: 'users', label: 'Usuarios', icon: '👥', roles: ['admin'] },
+    { view: 'dashboard', label: 'Dashboard', roles: ['administracion', 'doctor', 'cuidador'] },
+    { view: 'patients', label: 'Pacientes', roles: ['administracion', 'doctor', 'cuidador'] },
+    { view: 'records', label: 'Registros', roles: ['administracion', 'doctor'] },
+    { view: 'appointments', label: 'Citas', roles: ['administracion', 'doctor'] },
+    { view: 'education', label: 'Material Educativo', roles: ['administracion', 'doctor', 'cuidador'] },
+    { view: 'users', label: 'Usuarios', roles: ['administracion'] },
   ];
 
   return (
-    <div className="w-64 bg-white shadow-md h-screen sticky top-0">
-      <div className="p-4 border-b">
-        <h2 className="text-xl font-bold text-gray-800">GSI</h2>
-        <p className="text-sm text-gray-500">Gestor de Salud Infantil</p>
+    <div className="w-64 bg-blue-800 text-white p-4 min-h-screen">
+      <div className="mb-8 p-2 border-b border-blue-700">
+        <h2 className="text-xl font-bold">Vidawasi</h2>
+        <p className="text-sm text-blue-200">Gestión de Salud Infantil</p>
       </div>
-      <nav className="p-4">
-        <ul className="space-y-2">
-          {menuItems
-            .filter(item => item.roles.includes(userRole))
-            .map(item => (
-              <li key={item.id}>
-                <button
-                  onClick={() => setCurrentView(item.id)}
-                  className={`w-full flex items-center p-3 rounded-lg transition-colors ${currentView === item.id ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}`}
-                >
-                  <span className="mr-3 text-lg">{item.icon}</span>
-                  <span>{item.label}</span>
-                </button>
-              </li>
-            ))}
-        </ul>
+
+      <nav className="space-y-1">
+        {menuItems
+          .filter(item => item.roles.includes(userRole))
+          .map(item => (
+            <button
+              key={item.view}
+              onClick={() => setCurrentView(item.view)}
+              className={`w-full text-left px-4 py-2 rounded-lg transition ${
+                currentView === item.view
+                  ? 'bg-blue-600 font-medium'
+                  : 'hover:bg-blue-700'
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
       </nav>
-      <div className="p-4 border-t absolute bottom-0 w-full">
+
+      <div className="mt-8 pt-4 border-t border-blue-700">
         <button
           onClick={onLogout}
-          className="w-full flex items-center p-3 rounded-lg hover:bg-gray-100 text-red-500"
+          className="w-full text-left px-4 py-2 text-red-300 hover:bg-blue-700 rounded-lg transition"
         >
-          <span className="mr-3 text-lg">🚪</span>
-          <span>Cerrar Sesión</span>
+          Cerrar sesión
         </button>
       </div>
     </div>

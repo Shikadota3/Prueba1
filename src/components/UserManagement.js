@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { getFromLocalStorage } from '../utils/storage';
+import { getPacientes, getCitas } from '../utils/database';
 
 const UserManagement = () => {
-  const [users, setUsers] = useState([]);
   const [stats, setStats] = useState({
     totalPatients: 0,
     upcomingAppointments: 0,
@@ -11,65 +10,68 @@ const UserManagement = () => {
   });
 
   useEffect(() => {
-    const storedUsers = getFromLocalStorage('users') || [];
-    const storedPatients = getFromLocalStorage('patients') || [];
-    const storedAppointments = getFromLocalStorage('appointments') || [];
-    
-    setUsers(storedUsers);
-    setStats({
-      totalPatients: storedPatients.length,
-      upcomingAppointments: storedAppointments.filter(a => a.status === 'pending').length,
-      anemiaCases: storedPatients.filter(p => p.hemoglobin < 11).length,
-      completedControls: storedPatients.filter(p => p.hemoglobin).length
-    });
+    const loadStats = async () => {
+      try {
+        const [pacientes, citas] = await Promise.all([
+          getPacientes(),
+          getCitas()
+        ]);
+
+        setStats({
+          totalPatients: pacientes.length,
+          upcomingAppointments: citas.filter(c => c.estado === 'pendiente').length,
+          anemiaCases: pacientes.filter(p => p.hemoglobina < 11 || p.diagnostico?.toLowerCase().includes('anemia')).length,
+          completedControls: pacientes.filter(p => p.diagnostico).length
+        });
+      } catch (error) {
+        console.error('Error cargando estadísticas:', error);
+      }
+    };
+    loadStats();
   }, []);
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-xl font-semibold mb-6">Gestión de Usuarios</h2>
+      <h2 className="text-xl font-semibold mb-6">Estadísticas de Salud</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-          <h3 className="text-sm text-blue-800">Niños Registrados</h3>
-          <p className="text-2xl font-bold">{stats.totalPatients}</p>
+          <h3 className="text-sm text-blue-800 font-medium">Niños Registrados</h3>
+          <p className="text-2xl font-bold text-blue-600">{stats.totalPatients}</p>
         </div>
+        
         <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-100">
-          <h3 className="text-sm text-yellow-800">Próximas Citas</h3>
-          <p className="text-2xl font-bold">{stats.upcomingAppointments}</p>
+          <h3 className="text-sm text-yellow-800 font-medium">Próximas Citas</h3>
+          <p className="text-2xl font-bold text-yellow-600">{stats.upcomingAppointments}</p>
         </div>
+        
         <div className="bg-red-50 p-4 rounded-lg border border-red-100">
-          <h3 className="text-sm text-red-800">Casos Anemia</h3>
-          <p className="text-2xl font-bold">{stats.anemiaCases}</p>
+          <h3 className="text-sm text-red-800 font-medium">Casos de Anemia</h3>
+          <p className="text-2xl font-bold text-red-600">{stats.anemiaCases}</p>
         </div>
+        
         <div className="bg-green-50 p-4 rounded-lg border border-green-100">
-          <h3 className="text-sm text-green-800">Controles Realizados</h3>
-          <p className="text-2xl font-bold">{stats.completedControls}</p>
+          <h3 className="text-sm text-green-800 font-medium">Controles Realizados</h3>
+          <p className="text-2xl font-bold text-green-600">{stats.completedControls}</p>
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registro</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {users.map(user => (
-              <tr key={user.email}>
-                <td className="px-6 py-4 whitespace-nowrap">{user.name}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
-                <td className="px-6 py-4 whitespace-nowrap capitalize">{user.role}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {new Date(user.registeredAt).toLocaleDateString()}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <h3 className="text-lg font-medium mb-3">Indicadores Clave</h3>
+        <div className="space-y-2">
+          <div>
+            <span className="text-sm text-gray-600">Tasa de anemia: </span>
+            <span className="font-medium">
+              {stats.totalPatients > 0 
+                ? ((stats.anemiaCases / stats.totalPatients) * 100).toFixed(1) 
+                : 0}%
+            </span>
+          </div>
+          <div>
+            <span className="text-sm text-gray-600">Citas pendientes: </span>
+            <span className="font-medium">{stats.upcomingAppointments}</span>
+          </div>
+        </div>
       </div>
     </div>
   );
